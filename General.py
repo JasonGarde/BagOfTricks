@@ -6,28 +6,42 @@ from pandas import read_csv
 def folder_check(directory,create = True):
     """
     Checks to see if a directory exists on hardrive and allows for the creation of it if not.
+    Parameters
+    ----------
+    directory : string
+        The directory that is being checked
+    create : bool
+        If True and the directory does not exist, it is created.
     """
-    if not os.path.exists(directory):
-        print(directory+" does not exist!")
-        if create == True:
-            print("creating directory")
-            os.makedirs(directory)   
+    if not os.path.exists(directory): #Checks if folder exists
+        if create == True: 
+            os.makedirs(directory) # Creates folder   
             
 def copytree(src, dst, symlinks=False, ignore=None):
     """
     Copies folder to another directory
+    Parameters
+    ----------
+    scr : string
+        The source directory to be copied
+    dst : string
+        The destination to where the folder is copied
     """
-    for item in os.listdir(src):
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-        if os.path.isdir(s):
+    for item in os.listdir(src): #Scans items in folder
+        s = os.path.join(src, item) # Creates source path for file
+        d = os.path.join(dst, item) # Creates destination path for file
+        if os.path.isdir(s): # Copies file to new directory
             shutil.copytree(s, d, symlinks, ignore)
         else:
             shutil.copy2(s, d)            
             
 def clear_folder(folder):
     """
-    Clears the contents of a directory
+    Clears the contents of a directory (WARNING: BE CAREFUL WITH THIS FUNCTION TO AVOID LARGE DATA LOSS)
+    Parameters
+    ----------
+    folder : string
+        The directory that wants to emptied
     """
     for filename in os.listdir(folder):
         file_path = os.path.join(folder, filename)
@@ -41,10 +55,22 @@ def clear_folder(folder):
             
 def read_folder(directory, file_suffix, import_limit = 0, name_exclusions = []):
     """
-    Imports every file from a folder of a particular file type (NOTE: Only tested for csv files)
+    Imports every file from a folder of a particular file type into a dictionary (NOTE: Only tested for csv files)
     Parameters
     ----------
+    directory : string
+        The directory containing the files to import
+    file_suffix : string
+        The file format of the import files
+    import_limit : int
+        Limits the number of files imported
+    name_exclusions : list
+        A list of strings that tells read_folder to ignore any file names containing those strings
     
+    Returns
+    ----------
+    data : dictionary
+        A dictiony containing the data that is imported
     """
     files = os.listdir(directory) # gathers list of files in directory
     data = {}
