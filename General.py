@@ -2,6 +2,10 @@ import pandas as pd
 import os
 import shutil
 from pandas import read_csv
+from re import findall
+import json
+
+
 
 def folder_check(directory,create = True):
     """
@@ -53,7 +57,7 @@ def clear_folder(folder):
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))   
             
-def read_folder(directory, file_suffix, import_limit = 0, name_exclusions = []):
+def read_folder(directory, file_suffix, import_limit = 0, name_exclusions = [], index_col = None, index_system = None):
     """
     Imports every file from a folder of a particular file type into a dictionary (NOTE: Only tested for csv files)
     Parameters
@@ -66,11 +70,15 @@ def read_folder(directory, file_suffix, import_limit = 0, name_exclusions = []):
         Limits the number of files imported
     name_exclusions : list
         A list of strings that tells read_folder to ignore any file names containing those strings
-    
+    index_col : int, str, sequence of int / str, or False, default None
+        selects which column in file acts as index column.
+    index_system : string, None default None
+        Decides how the import files are indexed in dictionary
+        'filename_numbers' indexes by numbers in filename
     Returns
     ----------
     data : dictionary
-        A dictiony containing the data that is imported
+        A dictionary containing the data that is imported
     """
     files = os.listdir(directory) # gathers list of files in directory
     data = {}
@@ -83,10 +91,65 @@ def read_folder(directory, file_suffix, import_limit = 0, name_exclusions = []):
             pass
         else:
             Count += 1
-            data[str(Count)] = read_csv(temp_file_name) # imports file into dictionary
+            if index_system == 'filename_numbers':
+                data[findall("\d+",file)[0]] = read_csv(temp_file_name,index_col = index_col) # imports file into dictionary
+            else:
+                data[str(Count)] = read_csv(temp_file_name,index_col = index_col) # imports file into dictionary
         if import_limit > 0: # if no of file has been limited, checks count
             if Count == import_limit: 
                 break
     return data
+
+
+def nested_update(obj, key, value):
+    """
+    Edits a key within a nested dictionary
+    
+    Parameters
+    ----------
+    obj : dict
+        Dictionary to be edited
+    key : string
+        Key within dictionary to be edited
+    value : string, int, float
+        New value for key
+
+    """
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, (dict, list)):
+                nested_update(v, key, value)
+            elif k == key:
+                obj[k] = value
+    elif isinstance(obj, list):
+        for item in obj:
+            nested_update(item, key, value)     
+            
+
+def json_edit(file_location, parameter, parameter_value):
+    """
+    Edits a parameter within a json file.
+
+    Parameters
+    ----------
+    file_location : string
+        Location of json file that is being edited, json file is imported as a dict
+    parameter : list(string)
+        List of keys for location of key being edited
+    parameter_value : string, int, float
+        New value for key
+        
+    """
+    #Open json file
+    file_access = open(file_location, "r")
+    json_object = json.load(file_access)
+    
+    #Edit Parameter
+    nested_update(json_object, parameter, parameter_value)
+            
+    #Saves json file
+    file_access = open(file_location, "w")
+    json.dump(json_object, file_access)
+    file_access.close()
             
   
